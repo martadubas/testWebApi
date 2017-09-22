@@ -1,0 +1,84 @@
+﻿
+@model WeatherAPI.Models.Response
+
+@{
+    ViewBag.Title = "About";
+}
+
+<div class="col-md-12">
+
+    <h3>Current condition in <span data-bind="text: name"></span></h3>
+    <input class="form-control" type="text" id="city" placeholder="Type in place" />
+    @*<select class="form-control" id="citySel">
+        </select>*@
+    <br />
+
+    <p>Temperature: <span data-bind="text:main.temp"></span></p>
+    <p>Humidity: <span data-bind="text: main.humidity"></span></p>
+    <p>Wind: <span data-bind="text: wind.speed"></span></p>
+    <button type="submit" id="buttonShow" class="btn btn-info">Show weather</button>
+</div>
+<br />
+<div id="img" class="col-md-12"></div>
+
+
+<script>
+
+    var weather = Object();
+    var photo = Object();
+    var responseObject = Object();
+    var cityInput = $("#city");
+
+
+    $(document).ready(function () {
+
+        var model = @Html.Raw(Json.Encode(Model));
+        cityInput.focus();
+        console.log(model);
+
+        $(document).bind('keypress', function (e) {
+            if (e.keyCode == 13) {
+                $('#buttonShow').trigger('click');
+            }
+        });
+
+       
+        $("#buttonShow").click(function () {
+            cityName = cityInput.val();
+
+            $.get("@Url.Action("GetWeather","Home")?city=" + cityName, function (response) {
+
+               // console.log(response);
+
+                weather = ko.mapping.fromJS(response);
+                ko.applyBindings(weather);
+                cityInput.select();
+
+            });
+
+                $.get("@Url.Action("GetPhotoObject", "Home")?city=" + cityName, function (urlResponse) {
+
+                    //console.log(urlResponse);
+
+                 $("#img").empty();
+                 $("#img").append("<img  src='" + urlResponse + "'>");
+
+              });
+
+                $.ajax({
+                    contentType: 'application/json',
+                    data: JSON.stringify({ "searchword": cityName }),
+                    dataType: 'json',
+                    processData: false,
+                    type: 'POST',
+                    url: 'https://prod-23.northeurope.logic.azure.com:443/workflows/018097521b78464dbb4414788d29eafb/triggers/manual/paths/invoke?api-version=2016-10-01&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=OEoJsg2mGD-ij6CCCkYmxs9jdhTdeTIVPDy27I56jWQ'
+                });
+
+        });
+
+
+    });
+
+
+
+</script>
